@@ -29,17 +29,14 @@ app.MapPost("/api/products/lote", (List<Product> newProducts) =>
 {
     //Verificar que no venga vacia 
     if (newProducts.Count() == 0) return Results.BadRequest();
-
     //Contabilizar los IDs
-    int nextID = inventory.Count()>0 ? inventory.Max(p => p.Id) + 1 : 1;
-    
+    int nextID = inventory.Count() > 0 ? inventory.Max(p => p.Id) + 1 : 1;
     //Asignar los IDs
     foreach (var product in newProducts)
     {
         product.Id = nextID;//asignamos el id
         nextID++;//Aumentamos para el siguiente producto
     }
-
     //Add Range agrega los productos de golpe 
     inventory.AddRange(newProducts);
     return Results.Ok(newProducts);
@@ -51,21 +48,32 @@ app.MapPost("/api/products/lote", (List<Product> newProducts) =>
 app.MapPut("api/products/{id:int}", (Product productUpdated, int id) =>
 {
     //Verificamos que no venga vacia
-    if(productUpdated is null) Results.BadRequest();
-
+    if(productUpdated is null) return Results.BadRequest();
     //Verificamos que el producto si exista
     var product = inventory.FirstOrDefault(p => p.Id == id);
-    if (product is null) Results.BadRequest();
-
+    if (product is null) return Results.NotFound();
     //Actualizamos los campos
     product.Name = productUpdated.Name;
     product.Price = productUpdated.Price;
-    productUpdated.Stock = productUpdated.Stock;
+    product.Stock = productUpdated.Stock;
 
-    return Results.Ok(productUpdated);
-    //return Results.NoContent(); msj de exito pero sin cuerpo de respuesta 
+    return Results.NoContent();
 
 });
+
+//DELETE
+app.MapDelete("api/products/{id:int}", (int id) =>
+{
+    //Verificamos que el producto exista
+    var product = inventory.FirstOrDefault(p => p.Id == id );
+    if (product is null) return Results.NotFound();
+    //Eliminamos 
+    inventory.Remove(product);
+    return Results.NoContent();
+
+});
+
+
 
 
 

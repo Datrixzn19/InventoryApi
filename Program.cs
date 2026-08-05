@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -73,7 +75,18 @@ app.MapDelete("api/products/{id:int}", (int id) =>
 
 });
 
+//Cabeceras
+app.MapGet("api/products/safe", ([FromHeader(Name = "Authorization")] string? authHeader ) =>
+{
+    if (string.IsNullOrWhiteSpace(authHeader)) return Results.Unauthorized(); //err 401
 
+    if (authHeader.StartsWith("Bearer ") && authHeader == "Bearer MiTokenSecreto123")
+    { 
+    return Results.Ok(new { Mensaje = "Usuario Autorizado" });
+    }
+
+    return Results.Unauthorized();
+});
 
 
 

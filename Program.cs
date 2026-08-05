@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using InventoryApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -93,14 +94,6 @@ app.MapGet("api/products/safe", ([FromHeader(Name = "Authorization")] string? au
 app.Run();
 
 
-public class Product
-{
-    public int Id { get; set; }
-    public string? Name { get; set; }
-    public decimal Price { get; set; }
-    public int Stock { get; set; }
-
-}
 
 
 

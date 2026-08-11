@@ -19,19 +19,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// using crea un entorno (scope) temporal aislado.
+// using crea un entorno scope temporal aislado.
 // Al terminar el bloque, la memoria utilizada para pedir la base de datos se libera.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    // Migrate() revisa el archivo físico inventory.db.
+    // Migrate revisa el archivo físico inventory.db.
     // Si le faltan tablas generadas en tus Migraciones las crea automáticamente sin destruir los datos que ya existen.
     db.Database.Migrate();
 }
 
 
-// enlaza todas tus rutas bajo el prefijo "/api/products" al ciclo de vida del servidor.
+// enlaza todas las rutas bajo el prefijo "/api/products" al ciclo de vida del servidor.
 app.MapProductEndpoints();
 
 

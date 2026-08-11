@@ -24,24 +24,9 @@ namespace InventoryApi.Endpoints
         //si la clase es static los metodos tambien deben serlo 
         public static void MapProductEndpoints(this IEndpointRouteBuilder app)
         {
-            //var group = app.MapGroup("/api/products"); //Prefijo para las demas 
-
-            //GET
-            //Obtener todos los productos
-            app.MapGet("/api/products", async (AppDbContext db) =>
-            {
-                // SINTAXIS: FromSqlRaw ejecuta una consulta SQL nativa directa a tu base de datos SQLite.
-                // Es ideal para mantener el control estructural de tus sentencias en el backend.
-                // ToListAsync() toma los resultados de ese SQL y los convierte de forma asíncrona en una lista de C#.
-                var products = await db.Products
-                                       .FromSqlRaw("SELECT * FROM Products")
-                                       .ToListAsync();
-
-                return Results.Ok(products);
-            });
-
-            // SINTAXIS: Este endpoint devolverá información interna de EF Core.
-            // 'CanConnect()' fuerza una prueba de conexión rápida al archivo físico.
+            var group = app.MapGroup("/api/products"); //Prefijo para las demas 
+            /*
+            // Probar conexion a efcore
             app.MapGet("/api/products/debug", (AppDbContext db) =>
             {
                 var debugInfo = new
@@ -52,6 +37,36 @@ namespace InventoryApi.Endpoints
                 };
                 return Results.Ok(debugInfo);
             });
+
+             */
+            //GET
+            //Obtener todos los productos
+            group.MapGet("/", async (AppDbContext db) =>
+            {
+                // FromSqlRaw ejecuta una consulta SQL nativa directa a tu base de datos SQLite.
+                var products = await db.Products
+                                       .FromSqlRaw($"SELECT * FROM Products")
+                                       .ToListAsync();//toma los resultados de ese SQL y los convierte de forma asíncrona en una lista 
+
+                return Results.Ok(products);
+            });
+            //Obtener un solo elemento
+            group.MapGet("/{id:int}", async (AppDbContext db, int id ) =>
+            {
+                var product = await db.Products
+                    .FromSqlRaw($"SELECT * FROM Products WHERE Id = {id}")
+                    .ToListAsync();
+                return Results.Ok(product);
+            });
+
+           
+
+
+
+
+
+
+
 
 
         }

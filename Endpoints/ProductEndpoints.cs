@@ -3,6 +3,7 @@ using InventoryApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InventoryApi.Data;
+using System.Threading.Tasks;
 
 namespace InventoryApi.Endpoints
 {
@@ -22,7 +23,7 @@ namespace InventoryApi.Endpoints
 
         //la palabra this es lo que lo convierte en un metodo de extension 
         //si la clase es static los metodos tambien deben serlo 
-        public static void MapProductEndpoints(this IEndpointRouteBuilder app)
+        public static async Task MapProductEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/api/products"); //Prefijo para las demas 
             /*
@@ -43,23 +44,43 @@ namespace InventoryApi.Endpoints
             //Obtener todos los productos
             group.MapGet("/", async (AppDbContext db) =>
             {
+                /*
+                 * Con sql
                 // FromSqlRaw ejecuta una consulta SQL nativa directa a tu base de datos SQLite.
                 var products = await db.Products
                                        .FromSqlRaw($"SELECT * FROM Products")
                                        .ToListAsync();//toma los resultados de ese SQL y los convierte de forma asíncrona en una lista 
 
                 return Results.Ok(products);
+                */
+                var products = await db.Products.AsNoTracking().ToListAsync();
+                return products is null ? Results.NotFound() : Results.Ok(products);
             });
+
             //Obtener un solo elemento
             group.MapGet("/{id:int}", async (AppDbContext db, int id ) =>
             {
-                var product = await db.Products
-                    .FromSqlRaw($"SELECT * FROM Products WHERE Id = {id}")
-                    .ToListAsync();
-                return Results.Ok(product);
+                var product = await db.Products.FirstOrDefaultAsync(u => u.Id == id);
+
+                return product is null ? Results.NotFound() : Results.Ok(product);
             });
 
-           
+            //POST
+            //agregar un solo producto
+            group.MapPost("/", async (Product newProduct, AppDbContext db) => {
+                db.Products.Add(newProduct);//toma esto y lo pone en memoria
+                await db.SaveChangesAsync();//traduce los cambios en memoria a consultas sql y modifica la bdd 
+                //EfCore pone automaticamente los ids incrementales
+                return Results.Created();
+            });
+            //agregar una lista de productos 
+            group.MapPost("/lote", async (List<Product> newProducts, AppDbContext db) => {
+                if (newProducts.Count == 0) return Results.BadRequest("La no puede estar vacia");
+                db.Products.AddRange(newProducts);//Add range es para agregar mas de un producto 
+                await db.SaveChangesAsync();
+                return Results.Created();
+            });
+
 
 
 

@@ -53,8 +53,10 @@ namespace InventoryApi.Endpoints
 
                 return Results.Ok(products);
                 */
-                var products = await db.Products.AsNoTracking().ToListAsync();
-                return products is null ? Results.NotFound() : Results.Ok(products);
+                var products = await db.Products
+                    .AsNoTracking()//Esta linea va solo si se va a leer los datos, si vamos a mod quitamos
+                    .ToListAsync();
+                return Results.Ok(products);
             });
 
             //Obtener un solo elemento
@@ -64,14 +66,14 @@ namespace InventoryApi.Endpoints
 
                 return product is null ? Results.NotFound() : Results.Ok(product);
             });
-
+            
             //POST
             //agregar un solo producto
             group.MapPost("/", async (Product newProduct, AppDbContext db) => {
                 db.Products.Add(newProduct);//toma esto y lo pone en memoria
                 await db.SaveChangesAsync();//traduce los cambios en memoria a consultas sql y modifica la bdd 
                 //EfCore pone automaticamente los ids incrementales
-                return Results.Created();
+                return Results.Created($"/api/products/{newProduct.Id}", newProduct);//El estandar pide que demos la ruta donde se ha creado, opcionalmente el elemento en si
             });
             //agregar una lista de productos 
             group.MapPost("/lote", async (List<Product> newProducts, AppDbContext db) => {
@@ -82,8 +84,19 @@ namespace InventoryApi.Endpoints
             });
 
 
+            //PUT
+            group.MapPut("/{id:int}", async (Product updatedProduct, int id, AppDbContext db) =>
+            {
+                var product = await db.Products.FindAsync(id);//Metodo especifico para buscar IDs
+                if (product is null) return Results.NotFound();//verificamos que si haya ese producto
+                //Actualizamos los campos
+                product.Name = updatedProduct.Name;
+                product.Price = updatedProduct.Price;
+                product.Stock = updatedProduct.Stock;
+                await db.SaveChangesAsync();             
+                return Results.NoContent();
 
-
+            });
 
 
 

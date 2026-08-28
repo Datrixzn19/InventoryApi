@@ -101,12 +101,20 @@ namespace InventoryApi.Endpoints
             //DELETE 
             group.MapDelete("/{id:int}",async (int id, AppDbContext db) =>
             {
+                /*
                 var product = await db.Products.FindAsync(id);
                 if (product is null) return Results.NotFound();
 
                 db.Products.Remove(product);
                 await db.SaveChangesAsync();
                 return Results.Ok(product);
+                */
+                //Codigo optimizado 
+                var filasAfectadas = await db.Products
+                .Where(p => p.Id == id)
+                .ExecuteDeleteAsync();
+
+                return filasAfectadas == 0 ? Results.NotFound() : Results.NoContent();
             });
 
 
